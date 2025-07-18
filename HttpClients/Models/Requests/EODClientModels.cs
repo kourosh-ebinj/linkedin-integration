@@ -10,7 +10,6 @@ public record EODClientRequest : ListClientRequestBase
 /// </summary>
 public record EODClientResponse : ListClientResponseBase<EODClientResponseData>
 {
-    public EODClientError? Error { get; set; }
 }
 
 public record EODClientResponseData
@@ -20,10 +19,16 @@ public record EODClientResponseData
     public decimal Low { get; set; }
     public decimal Close { get; set; }
     public decimal Volume { get; set; }
-    public string Date { get; set; }
+    public required string Date { get; set; }
 }
 
-public record EODClientError {
+public record EODClientError
+{
+    public required EODClientErrorModel Error { get; set; }
+}
+
+public record EODClientErrorModel
+{
     public required string Code { get; set; }
     public required string Message { get; set; }
 }

@@ -12,7 +12,7 @@ public class MarketStackClientService : HttpClientService<MarketStackClientServi
 
     public MarketStackClientService(HttpClient httpClient, ILogger<MarketStackClientService> logger) : base(httpClient, logger)
     {
-        
+
     }
 
     public async Task<Result<EODClientResponse>> GetEODs(EODClientRequest request, CancellationToken cancellationToken = default)
@@ -33,8 +33,11 @@ public class MarketStackClientService : HttpClientService<MarketStackClientServi
             var response = await _httpClient.GetAsync(uri, cancellationToken: cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
-                var errorMessage = await response.Content.ReadAsStringAsync(cancellationToken);
-                return Failure<EODClientResponse>($"Error fetching EOD data: {errorMessage}");
+                var error = await response.Content.ReadFromJsonAsync<EODClientError>(cancellationToken);
+                if (error is null)
+                    return Failure<EODClientResponse>($"An error occured in calling eod api.");
+
+                return Failure<EODClientResponse>($"{error.Error?.Message} ({error.Error?.Code})");
             }
 
             var result = await response.Content.ReadFromJsonAsync<EODClientResponse>(cancellationToken);
@@ -45,8 +48,6 @@ public class MarketStackClientService : HttpClientService<MarketStackClientServi
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "GetEODs failed.");
-
             return Failure<EODClientResponse>(ex.Message);
         }
     }
@@ -70,8 +71,11 @@ public class MarketStackClientService : HttpClientService<MarketStackClientServi
             var response = await _httpClient.GetAsync(uri, cancellationToken: cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
-                var errorMessage = await response.Content.ReadAsStringAsync(cancellationToken);
-                return Failure<TickersClientResponse>($"Error fetching tickers data: {errorMessage}");
+                var error = await response.Content.ReadFromJsonAsync<EODClientError>(cancellationToken);
+                if (error is null)
+                    return Failure<TickersClientResponse>($"An error occured in calling tickers api.");
+
+                return Failure<TickersClientResponse>(error.Error.Message, ErrorType.Failure, error.Error.Code);
             }
 
             var result = await response.Content.ReadFromJsonAsync<TickersClientResponse>(cancellationToken);
@@ -82,8 +86,6 @@ public class MarketStackClientService : HttpClientService<MarketStackClientServi
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "GetTickers failed.");
-
             return Failure<TickersClientResponse>(ex.Message);
         }
     }
