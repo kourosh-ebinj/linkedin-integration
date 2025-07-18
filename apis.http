@@ -1,0 +1,10 @@
+@LinkedIn_Notes_HostAddress = http://localhost:5237
+
+GET {{LinkedIn_Notes_HostAddress}}/MarketStack/EODs
+Accept: application/json
+###
+
+GET {{LinkedIn_Notes_HostAddress}}/MarketStack/Tickers
+Accept: application/json
+
+###
